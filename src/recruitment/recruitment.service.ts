@@ -1,4 +1,9 @@
-import { Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateRecruitmentDto } from './dto/create-recruitment.dto';
@@ -8,6 +13,7 @@ import { ReadRecruitmentDto } from './dto/read-recruitment.dto';
 import { Company } from 'src/company/entities/company.entity';
 import { plainToClass } from 'class-transformer';
 import { CompanyService } from 'src/company/company.service';
+import { ReadRecruitmentDetailDto } from './dto/read-recruitment-detail.dto';
 
 @Injectable()
 export class RecruitmentService {
@@ -22,20 +28,21 @@ export class RecruitmentService {
 
   async createRecruitment(
     createRecruitmentDto: CreateRecruitmentDto,
-  ): Promise<ReadRecruitmentDto> {
-    const { position, reward, skill, content, company } = createRecruitmentDto;
+  ): Promise<number> {
+    const { position, reward, skill, content, name, district, country } =
+      createRecruitmentDto;
 
     let companyInfo = await this.companyRepository.findOne({
       where: {
-        name: company.name,
+        name,
       },
     });
 
     if (!companyInfo) {
       const newCompany = this.companyRepository.create({
-        name: company.name,
-        country: company.country || '한국',
-        district: company.district || '판교',
+        name,
+        country: country || '한국',
+        district: district || '판교',
       });
       companyInfo = await this.companyRepository.save(newCompany);
     }
@@ -50,14 +57,30 @@ export class RecruitmentService {
 
     await this.recruitmentRepository.save(newRecruitment);
 
-    return plainToClass(ReadRecruitmentDto, {
-      id: newRecruitment.id,
-      countryName: companyInfo.name,
-      country: companyInfo.country,
-      district: companyInfo.district,
-      position: newRecruitment.position,
-      reward: newRecruitment.reward,
-      skill: newRecruitment.skill,
+    return newRecruitment.id;
+  }
+
+  async findOneRecruitmentById(id: number): Promise<ReadRecruitmentDetailDto> {
+    const findCompany = await this.recruitmentRepository.findOne({
+      where: {
+        id,
+      },
+      relations: ['company'],
+    });
+
+    if (!findCompany) {
+      throw new NotFoundException(`Recruitment with ID ${id} not found`);
+    }
+
+    return plainToClass(ReadRecruitmentDetailDto, {
+      id,
+      name: findCompany.company.name,
+      country: findCompany.company.country,
+      district: findCompany.company.district,
+      position: findCompany.position,
+      reward: findCompany.reward,
+      skill: findCompany.skill,
+      content: findCompany.content,
     });
   }
 
@@ -84,25 +107,25 @@ export class RecruitmentService {
   async updateRecruitment(
     id: number,
     updateRecruitmentDto: UpdateRecruitmentDto,
-  ): Promise<ReadRecruitmentDto | null> {
-    const { companyName, country, district, position, reward, skill } =
+  ): Promise<void> {
+    const { name, country, district, position, reward, skill } =
       updateRecruitmentDto;
 
     let companyInfo = await this.companyRepository.findOne({
       where: {
-        name: companyName,
+        name: name,
       },
     });
 
     if (!companyInfo) {
       const newCompany = this.companyRepository.create({
-        name: companyName,
+        name: name,
         country: country || '한국',
         district: district || '판교',
       });
       companyInfo = await this.companyRepository.save(newCompany);
     } else {
-      companyInfo.name = companyName;
+      companyInfo.name = name;
       companyInfo.country = country || '한국';
       companyInfo.district = district || '판교';
     }
@@ -120,21 +143,19 @@ export class RecruitmentService {
       .execute();
 
     if (updateResult.affected === 0) {
-      return null;
+      throw new BadRequestException(`Recruitment ${id} NOT updated`);
     }
+  }
 
-    const updatedRecruitment = await this.recruitmentRepository.findOne({
+  async deleteRecruitmentById(id: number): Promise<void> {
+    const recruitment = await this.recruitmentRepository.findOne({
       where: { id },
     });
 
-    return plainToClass(ReadRecruitmentDto, {
-      id: updatedRecruitment.id,
-      companyName: updatedRecruitment.company.name,
-      country: updatedRecruitment.company.country,
-      district: updatedRecruitment.company.district,
-      position: updatedRecruitment.position,
-      reward: updatedRecruitment.reward,
-      skill: updatedRecruitment.skill,
-    });
+    if (!recruitment) {
+      throw new NotFoundException(`Recruitment ${id} NOT found`);
+    }
+
+    await this.recruitmentRepository.remove(recruitment);
   }
 }

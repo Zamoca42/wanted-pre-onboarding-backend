@@ -1,9 +1,8 @@
-import { Expose, Type } from 'class-transformer';
+import { Expose } from 'class-transformer';
 import { IsNumber, IsString } from 'class-validator';
 import { CreateCompanyDto } from 'src/company/dto/create-company.dto';
-import { Company } from 'src/company/entities/company.entity';
 
-export class CreateRecruitmentDto {
+export class CreateRecruitmentDto extends CreateCompanyDto {
   @IsString()
   @Expose()
   position: string;
@@ -19,8 +18,4 @@ export class CreateRecruitmentDto {
   @IsString()
   @Expose()
   content: string;
-
-  @Expose()
-  @Type(() => CreateCompanyDto)
-  company: Company
 }

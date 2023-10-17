@@ -1,25 +1,7 @@
 import { Expose } from 'class-transformer';
-import { IsNumber, IsString } from 'class-validator';
+import { CreateRecruitmentDto } from './create-recruitment.dto';
 
-export class ReadRecruitmentDto {
+export class ReadRecruitmentDto extends CreateRecruitmentDto{
   @Expose()
   id: number;
-
-  @Expose()
-  companyName: string;
-
-  @Expose()
-  country: string;
-
-  @Expose()
-  district: string;
-
-  @Expose()
-  position: string;
-
-  @Expose()
-  reward: number;
-
-  @Expose()
-  skill: string;
 }

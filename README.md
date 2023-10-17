@@ -22,9 +22,11 @@
   <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
   [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
-## Description
+## Tech Stack
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- [Nest](https://github.com/nestjs/nest)
+- TypeORM
+- Sqlite3
 
 ## Installation
 
@@ -45,29 +47,289 @@ $ npm run start:dev
 $ npm run start:prod
 ```
 
-## Test
+## 요구사항
 
-```bash
-# unit tests
-$ npm run test
+- [x] 1. 채용공고 등록
+- [x] 2. 채용공고 수정
+- [x] 3. 채용공고 삭제
+- [x] 4. 채용공고 목록
+  - [x] 4.1. 목록 가져오기
+  - [x] 4.2. 검색기능 구현
+- [x] 5. 채용 상세 페이지
+- [ ] 6. 사용자는 채용공고에 지원
 
-# e2e tests
-$ npm run test:e2e
+## 필수 기술요건
 
-# test coverage
-$ npm run test:cov
+- ORM 사용하여 구현.
+- RDBMS 사용 (SQLite, PostgreSQL,MySql 등).
+
+## 채용공고 CRUD
+
+### 등록
+
+```ts
+@Post('recruitment')
+async create(@Body() request: CreateRecruitmentDto) {
+  const createdRecruitmentId =
+    await this.recruitmentService.createRecruitment(request);
+  return this.recruitmentService.findOneRecruitmentById(createdRecruitmentId);
+}
 ```
 
-## Support
+- Request
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+  ```txt
+  POST: localhost:3000/recruitment
+  ```
 
-## Stay in touch
+  ```json
+  {
+    "name": "원티드랩",
+    "position": "백엔드",
+    "reward": 200000,
+    "skill": "Django",
+    "content": "채용 중입니다."
+  },
+  ```
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+- Response
 
-## License
+  ```json
+  {
+    "name": "원티드랩",
+    "country": "서울",
+    "district": "분당",
+    "position": "백엔드",
+    "reward": 200000,
+    "skill": "Django",
+    "content": "채용 중입니다."
+  }
+  ```
 
-Nest is [MIT licensed](LICENSE).
+### 수정
+
+```ts
+@Patch('recruitment/:id')
+async updateRecruitmentById(
+  @Param('id') id: string,
+  @Body() request: UpdateRecruitmentDto,
+) {
+  await this.recruitmentService.updateRecruitment(+id, request);
+  return this.recruitmentService.findOneRecruitmentById(+id);
+}
+```
+
+- Request
+
+  ```txt
+  PATCH: localhost:3000/recruitment/3
+  ```
+
+  ```json
+  {
+    "name": "원티드랩",
+    "position": "백엔드",
+    "reward": 200000,
+    "skill": "TS",
+    "content": "채용 중입니다.(수정됨)"
+  },
+  ```
+
+- Response
+
+  ```json
+  {
+    "name": "원티드랩",
+    "country": "서울",
+    "district": "분당",
+    "position": "백엔드",
+    "reward": 200000,
+    "skill": "TS",
+    "content": "채용 중입니다.(수정됨)"
+  }
+  ```
+
+### 삭제
+
+```ts
+@Delete('recruitment/:id')
+async removeRecruitment(@Param('id') id: string) {
+  await this.recruitmentService.deleteRecruitmentById(+id);
+  return await this.recruitmentService.findAllRecruitments();
+}
+```
+
+- Request
+
+  ```txt
+  DELETE: localhost:3000/recruitment/2
+  ```
+
+- Response
+
+  ```json
+  [
+    {
+      "id": 3,
+      "name": "원티드랩",
+      "country": "서울",
+      "district": "분당",
+      "position": "백엔드",
+      "reward": 200000,
+      "skill": "TS"
+    },
+    {
+      "id": 4,
+      "name": "원티드랩",
+      "country": "서울",
+      "district": "분당",
+      "position": "백엔드",
+      "reward": 200000,
+      "skill": "Django"
+    },
+    //...
+    {
+      "id": 7,
+      "name": "원티드코리아",
+      "country": "한국",
+      "district": "서울",
+      "position": "프론트엔드",
+      "reward": 200000,
+      "skill": "JS"
+    }
+  ]
+  ```
+
+### 읽기
+
+#### 목록 가져오기
+
+```ts
+@Get('recruitments')
+async findAll() {
+  return this.recruitmentService.findAllRecruitments();
+}
+```
+
+- Request
+
+  ```txt
+  GET: localhost:3000/recruitments
+  ```
+
+- Response
+
+  ```json
+  [
+    {
+      "id": 3,
+      "name": "원티드랩",
+      "country": "서울",
+      "district": "분당",
+      "position": "백엔드",
+      "reward": 200000,
+      "skill": "TS"
+    },
+    {
+      "id": 4,
+      "name": "원티드랩",
+      "country": "서울",
+      "district": "분당",
+      "position": "백엔드",
+      "reward": 200000,
+      "skill": "Django"
+    },
+    //...
+    {
+      "id": 7,
+      "name": "원티드코리아",
+      "country": "한국",
+      "district": "서울",
+      "position": "프론트엔드",
+      "reward": 200000,
+      "skill": "JS"
+    }
+  ]
+  ```
+
+#### 검색 기능
+
+```ts
+@Get('recruitments/search')
+async findRecruitments(@Query() request: RecruitmentsFiltersDto) {
+  return this.recruitmentService.findRecruitmentsWithFilters(request);
+}
+```
+
+```txt
+GET: localhost:3000/recruitments/search?(name= or position= )
+```
+
+- Request
+
+  ```
+  GET: localhost:3000/recruitments/search?position=프론트엔드
+  ```
+
+- Response
+
+  ```json
+  [
+    {
+      "id": 7,
+      "name": "원티드코리아",
+      "country": "한국",
+      "district": "서울",
+      "position": "프론트엔드",
+      "reward": 200000,
+      "skill": "JS"
+    },
+    {
+      "id": 8,
+      "name": "원티드랩",
+      "country": "서울",
+      "district": "분당",
+      "position": "프론트엔드",
+      "reward": 200000,
+      "skill": "JS"
+    },
+    {
+      "id": 9,
+      "name": "로켓펀치",
+      "country": "한국",
+      "district": "판교",
+      "position": "프론트엔드",
+      "reward": 200000,
+      "skill": "JS"
+    }
+  ]
+  ```
+
+#### 상세 페이지
+
+```ts
+@Get('recruitment/:id')
+async findOne(@Param('id') id: string) {
+  return this.recruitmentService.findOneRecruitmentById(+id);
+}
+```
+
+- Request
+
+  ```
+  GET: localhost:3000/recruitment/3
+  ```
+
+- Response
+
+  ```json
+  {
+    "name": "원티드랩",
+    "country": "서울",
+    "district": "분당",
+    "position": "백엔드",
+    "reward": 200000,
+    "skill": "TS",
+    "content": "채용 중입니다.(수정됨)"
+  }
+  ```

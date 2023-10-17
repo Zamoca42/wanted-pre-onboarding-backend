@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateRecruitmentDto } from './dto/create-recruitment.dto';
@@ -8,7 +8,6 @@ import { ReadRecruitmentDto } from './dto/read-recruitment.dto';
 import { Company } from 'src/company/entities/company.entity';
 import { plainToClass } from 'class-transformer';
 import { CompanyService } from 'src/company/company.service';
-import { CreateCompanyDto } from 'src/company/dto/create-company.dto';
 
 @Injectable()
 export class RecruitmentService {
@@ -16,7 +15,9 @@ export class RecruitmentService {
     @InjectRepository(Recruitment)
     private recruitmentRepository: Repository<Recruitment>,
     @InjectRepository(Company)
-    private companyRepository: Repository<Company>, // private readonly companyService: CompanyService,
+    private companyRepository: Repository<Company>,
+    @Inject(CompanyService)
+    private companyService: CompanyService,
   ) {}
 
   async createRecruitment(
@@ -24,19 +25,20 @@ export class RecruitmentService {
   ): Promise<ReadRecruitmentDto> {
     const { position, reward, skill, content, company } = createRecruitmentDto;
 
-    // const companyInfo = await this.companyRepository.findOne({
-    //   where: {
-    //     name,
-    //   },
-    // });
-    // if (!companyInfo) {
-    //   this.companyService.createCompany();
-    // }
-    const companyInfo = await this.companyRepository.findOne({
+    let companyInfo = await this.companyRepository.findOne({
       where: {
-        id: company.id,
+        name: company.name,
       },
     });
+
+    if (!companyInfo) {
+      const newCompany = this.companyRepository.create({
+        name: company.name,
+        country: company.country || '한국',
+        district: company.district || '판교',
+      });
+      companyInfo = await this.companyRepository.save(newCompany);
+    }
 
     const newRecruitment = this.recruitmentRepository.create({
       position,
@@ -48,11 +50,9 @@ export class RecruitmentService {
 
     await this.recruitmentRepository.save(newRecruitment);
 
-    // Retrieve additional company information
-
     return plainToClass(ReadRecruitmentDto, {
       id: newRecruitment.id,
-      name: companyInfo.name,
+      countryName: companyInfo.name,
       country: companyInfo.country,
       district: companyInfo.district,
       position: newRecruitment.position,
@@ -66,39 +66,75 @@ export class RecruitmentService {
       .createQueryBuilder('recruitment')
       .leftJoin('recruitment.company', 'company')
       .select([
-        'recruitment.id',
-        'company.name',
-        'company.country',
-        'company.district',
-        'recruitment.position',
-        'recruitment.reward',
-        'recruitment.skill',
+        'recruitment.id as id',
+        'company.name as companyName',
+        'company.country as country',
+        'company.district as district',
+        'recruitment.position as position',
+        'recruitment.reward as reward',
+        'recruitment.skill as skill',
       ])
-      .getMany();
+      .getRawMany();
 
-    return plainToClass(ReadRecruitmentDto, recruitments);
+    return recruitments.map((recruitment) =>
+      plainToClass(ReadRecruitmentDto, recruitment),
+    );
   }
 
-  // async updateRecruitment(
-  //   id: number,
-  //   updateRecruitmentDto: UpdateRecruitmentDto,
-  // ): Promise<Recruitment | null> {
-  //   const existingRecruitment = await this.recruitmentRepository.findOne(id);
-  //   if (!existingRecruitment) {
-  //     return null; // 채용공고를 찾을 수 없음
-  //   }
+  async updateRecruitment(
+    id: number,
+    updateRecruitmentDto: UpdateRecruitmentDto,
+  ): Promise<ReadRecruitmentDto | null> {
+    const { companyName, country, district, position, reward, skill } =
+      updateRecruitmentDto;
 
-  //   this.recruitmentRepository.merge(existingRecruitment, updateRecruitmentDto);
-  //   return this.recruitmentRepository.save(existingRecruitment);
-  // }
+    let companyInfo = await this.companyRepository.findOne({
+      where: {
+        name: companyName,
+      },
+    });
 
-  // async removeRecruitment(id: number): Promise<Recruitment | null> {
-  //   const existingRecruitment = await this.recruitmentRepository.findOne(id);
-  //   if (!existingRecruitment) {
-  //     return null; // 채용공고를 찾을 수 없음
-  //   }
+    if (!companyInfo) {
+      const newCompany = this.companyRepository.create({
+        name: companyName,
+        country: country || '한국',
+        district: district || '판교',
+      });
+      companyInfo = await this.companyRepository.save(newCompany);
+    } else {
+      companyInfo.name = companyName;
+      companyInfo.country = country || '한국';
+      companyInfo.district = district || '판교';
+    }
 
-  //   await this.recruitmentRepository.remove(existingRecruitment);
-  //   return existingRecruitment;
-  // }
+    const updateResult = await this.recruitmentRepository
+      .createQueryBuilder()
+      .update(Recruitment)
+      .set({
+        position,
+        reward,
+        skill,
+        company: companyInfo,
+      })
+      .where('id = :id', { id })
+      .execute();
+
+    if (updateResult.affected === 0) {
+      return null;
+    }
+
+    const updatedRecruitment = await this.recruitmentRepository.findOne({
+      where: { id },
+    });
+
+    return plainToClass(ReadRecruitmentDto, {
+      id: updatedRecruitment.id,
+      companyName: updatedRecruitment.company.name,
+      country: updatedRecruitment.company.country,
+      district: updatedRecruitment.company.district,
+      position: updatedRecruitment.position,
+      reward: updatedRecruitment.reward,
+      skill: updatedRecruitment.skill,
+    });
+  }
 }

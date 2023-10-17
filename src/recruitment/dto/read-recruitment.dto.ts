@@ -6,7 +6,7 @@ export class ReadRecruitmentDto {
   id: number;
 
   @Expose()
-  company_name: string;
+  companyName: string;
 
   @Expose()
   country: string;

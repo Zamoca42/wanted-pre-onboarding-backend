@@ -1,5 +1,6 @@
 import { CommonDateEntity } from 'src/common/entities/common.entities';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Recruitment } from 'src/recruitment/entities/recruitment.entity';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('company')
 export class Company extends CommonDateEntity {
@@ -14,4 +15,7 @@ export class Company extends CommonDateEntity {
 
   @Column()
   district: string;
+
+  @OneToMany(() => Recruitment, (recruitment) => recruitment.company)
+  recruitments: Recruitment[];
 }

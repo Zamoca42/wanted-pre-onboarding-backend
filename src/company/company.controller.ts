@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param } from '@nestjs/common';
 import { CompanyService } from './company.service';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
@@ -18,24 +10,47 @@ export class CompanyController {
   constructor(private readonly companyService: CompanyService) {}
 
   @Post()
-  create(@Body() request: CreateCompanyDto) {
-    return this.companyService.create(request);
+  async create(@Body() request: CreateCompanyDto) {
+    const createdCompany = await this.companyService.create(request);
+    return new CommonResponse<ReadCompanyDto>(true, '성공', createdCompany);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    // const companyData = this.companyService.findOne(+id)
-    // return new CommonResponse<ReadCompanyDto>(true, "성공", companyData);
-    return this.companyService.findOne(+id);
+  async findOne(@Param('id') id: string) {
+    const findOneCompany = await this.companyService.findOne(+id);
+    if (findOneCompany) {
+      return new CommonResponse<ReadCompanyDto>(true, '성공', findOneCompany);
+    } else {
+      return new CommonResponse<ReadCompanyDto>(
+        false,
+        '회사를 찾을 수 없습니다.',
+        null,
+      );
+    }
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCompanyDto: UpdateCompanyDto) {
-    return this.companyService.update(+id, updateCompanyDto);
+  async update(
+    @Param('id') id: string,
+    @Body() updateCompanyDto: UpdateCompanyDto,
+  ) {
+    const updatedCompany = await this.companyService.update(
+      +id,
+      updateCompanyDto,
+    );
+    if (updatedCompany) {
+      return new CommonResponse<ReadCompanyDto>(
+        true,
+        '업데이트 성공',
+        updatedCompany,
+      );
+    } else {
+      return new CommonResponse<ReadCompanyDto>(
+        false,
+        '회사를 찾을 수 없습니다.',
+        null,
+      );
+    }
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.companyService.remove(+id);
-  }
 }

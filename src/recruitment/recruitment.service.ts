@@ -9,7 +9,7 @@ import { Recruitment } from './entities/recruitment.entity';
 export class RecruitmentService {
   constructor(
     @InjectRepository(Recruitment)
-    private crudRpository: Repository<Recruitment>,
+    private recruitmentRpository: Repository<Recruitment>,
   ) {}
 
   create(createRecruitmentDto: CreateRecruitmentDto) {

@@ -11,28 +11,54 @@ import { ReadCompanyDto } from './dto/read-company.dto';
 @Injectable()
 export class CompanyService {
   constructor(
-    @InjectRepository(Company) private companyRpository: Repository<Company>,
+    @InjectRepository(Company) private companyRepository: Repository<Company>,
   ) {}
 
-  create(createCompanyDto: CreateCompanyDto): string {
-    this.companyRpository.save(createCompanyDto);
-    return 'This action adds a new company';
+  async createCompany(createCompanyDto: CreateCompanyDto): Promise<ReadCompanyDto> {
+    const newCompany = this.companyRepository.create(createCompanyDto);
+    await this.companyRepository.save(newCompany);
+    return plainToClass(ReadCompanyDto, newCompany);
   }
 
-  findOne(id: number): ReadCompanyDto {
-    const findCompany = this.companyRpository.findOne({
+  async findOneCompany(id: number): Promise<ReadCompanyDto | null> {
+    const findCompany = this.companyRepository.findOne({
       where: {
         id,
       },
     });
-    return plainToClass(ReadCompanyDto, findCompany);
+    if (findCompany) {
+      return plainToClass(ReadCompanyDto, findCompany);
+    }
+    return null;
   }
 
-  update(id: number, updateCompanyDto: UpdateCompanyDto) {
-    return `This action updates a #${id} company`;
+  async updateCompany(
+    id: number,
+    updateCompanyDto: UpdateCompanyDto,
+  ): Promise<ReadCompanyDto | null> {
+    const existingCompany = this.companyRepository.findOne({
+      where: {
+        id,
+      },
+    });
+
+    if (!existingCompany) {
+      return null;
+    }
+
+    await this.companyRepository
+      .createQueryBuilder()
+      .update(Company)
+      .set(updateCompanyDto)
+      .where('id = :id', { id: id })
+      .execute();
+
+    const updatedCompany = await this.companyRepository.findOne({
+      where: {
+        id,
+      },
+    });
+    return plainToClass(ReadCompanyDto, updatedCompany);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} company`;
-  }
 }

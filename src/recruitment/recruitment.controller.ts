@@ -1,34 +1,40 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { RecruitmentService } from './recruitment.service';
 import { CreateRecruitmentDto } from './dto/create-recruitment.dto';
 import { UpdateRecruitmentDto } from './dto/update-recruitment.dto';
 
-@Controller('recruitment')
+@Controller()
 export class RecruitmentController {
   constructor(private readonly recruitmentService: RecruitmentService) {}
 
-  @Post()
-  create(@Body() createRecruitmentDto: CreateRecruitmentDto) {
-    return this.recruitmentService.create(createRecruitmentDto);
-  }
-
-  @Get()
+  @Get('recruitments')
   findAll() {
-    return this.recruitmentService.findAll();
+    return this.recruitmentService.findAllRecruitments();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.recruitmentService.findOne(+id);
+  @Post('recruitment')
+  create(@Body() request: CreateRecruitmentDto) {
+    return this.recruitmentService.createRecruitment(request);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateRecruitmentDto: UpdateRecruitmentDto) {
-    return this.recruitmentService.update(+id, updateRecruitmentDto);
-  }
+  // @Patch('recruitment/:id')
+  // update(
+  //   @Param('id') id: string,
+  //   @Body() updateRecruitmentDto: UpdateRecruitmentDto,
+  // ) {
+  //   return this.recruitmentService.updateRecruitment(+id, updateRecruitmentDto);
+  // }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.recruitmentService.remove(+id);
-  }
+  // @Delete('recruitment/:id')
+  // remove(@Param('id') id: string) {
+  //   return this.recruitmentService.removeRecruitment(+id);
+  // }
 }

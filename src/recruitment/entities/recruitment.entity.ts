@@ -1,4 +1,5 @@
 import { CommonDateEntity } from 'src/common/entities/common.entities';
+import { Company } from 'src/company/entities/company.entity';
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('recruitment')
@@ -17,4 +18,7 @@ export class Recruitment extends CommonDateEntity {
 
   @Column()
   content: string;
+
+  @ManyToOne(() => Company, (company) => company.recruitments)
+  company: Company;
 }

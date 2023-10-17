@@ -12,7 +12,7 @@ import { UserModule } from './user/user.module';
       type: 'sqlite',
       database: 'recruitment.db',
       autoLoadEntities: true,
-      // synchronize: true,
+      synchronize: true,
       logging: true,
       // dropSchema: true,
     }),

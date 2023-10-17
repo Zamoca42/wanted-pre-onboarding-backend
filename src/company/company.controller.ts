@@ -11,13 +11,13 @@ export class CompanyController {
 
   @Post()
   async create(@Body() request: CreateCompanyDto) {
-    const createdCompany = await this.companyService.create(request);
+    const createdCompany = await this.companyService.createCompany(request);
     return new CommonResponse<ReadCompanyDto>(true, '성공', createdCompany);
   }
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    const findOneCompany = await this.companyService.findOne(+id);
+    const findOneCompany = await this.companyService.findOneCompany(+id);
     if (findOneCompany) {
       return new CommonResponse<ReadCompanyDto>(true, '성공', findOneCompany);
     } else {
@@ -34,7 +34,7 @@ export class CompanyController {
     @Param('id') id: string,
     @Body() updateCompanyDto: UpdateCompanyDto,
   ) {
-    const updatedCompany = await this.companyService.update(
+    const updatedCompany = await this.companyService.updateCompany(
       +id,
       updateCompanyDto,
     );
@@ -52,5 +52,4 @@ export class CompanyController {
       );
     }
   }
-
 }

@@ -14,18 +14,13 @@ export class CompanyService {
     @InjectRepository(Company) private companyRepository: Repository<Company>,
   ) {}
 
-  // create(createCompanyDto: CreateCompanyDto): string {
-  //   this.companyRpository.save(createCompanyDto);
-  //   return 'This action adds a new company';
-  // }
-
-  async create(createCompanyDto: CreateCompanyDto): Promise<ReadCompanyDto> {
+  async createCompany(createCompanyDto: CreateCompanyDto): Promise<ReadCompanyDto> {
     const newCompany = this.companyRepository.create(createCompanyDto);
     await this.companyRepository.save(newCompany);
     return plainToClass(ReadCompanyDto, newCompany);
   }
 
-  async findOne(id: number): Promise<ReadCompanyDto | null> {
+  async findOneCompany(id: number): Promise<ReadCompanyDto | null> {
     const findCompany = this.companyRepository.findOne({
       where: {
         id,
@@ -37,7 +32,7 @@ export class CompanyService {
     return null;
   }
 
-  async update(
+  async updateCompany(
     id: number,
     updateCompanyDto: UpdateCompanyDto,
   ): Promise<ReadCompanyDto | null> {
@@ -66,7 +61,4 @@ export class CompanyService {
     return plainToClass(ReadCompanyDto, updatedCompany);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} company`;
-  }
 }

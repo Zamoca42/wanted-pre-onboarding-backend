@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { RecruitmentModule } from './recruitment/recruitment.module';
 
 @Module({
   imports: [
@@ -12,7 +13,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       synchronize: true,
       logging: true,
       dropSchema: true,
-    })
+    }),
+    RecruitmentModule
   ],
   controllers: [AppController],
   providers: [AppService],

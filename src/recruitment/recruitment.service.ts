@@ -137,7 +137,7 @@ export class RecruitmentService {
     id: number,
     updateRecruitmentDto: UpdateRecruitmentDto,
   ): Promise<void> {
-    const { name, country, district, position, reward, skill } =
+    const { name, country, district, position, reward, skill, content } =
       updateRecruitmentDto;
 
     let companyInfo = await this.companyRepository.findOne({
@@ -162,6 +162,7 @@ export class RecruitmentService {
         position,
         reward,
         skill,
+        content,
         company: companyInfo,
       })
       .where('id = :id', { id })

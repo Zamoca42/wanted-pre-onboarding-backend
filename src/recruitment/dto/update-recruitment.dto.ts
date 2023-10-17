@@ -1,4 +1,4 @@
 import { PartialType } from '@nestjs/mapped-types';
-import { ReadRecruitmentDto } from './read-recruitment.dto';
+import { ReadRecruitmentDetailDto } from './read-recruitment-detail.dto';
 
-export class UpdateRecruitmentDto extends PartialType(ReadRecruitmentDto) {}
+export class UpdateRecruitmentDto extends PartialType(ReadRecruitmentDetailDto) {}

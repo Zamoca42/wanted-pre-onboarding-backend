@@ -15,6 +15,7 @@ export class CompanyService {
   ) {}
 
   async createCompany(createCompanyDto: CreateCompanyDto): Promise<ReadCompanyDto> {
+    
     const newCompany = this.companyRepository.create(createCompanyDto);
     await this.companyRepository.save(newCompany);
     return plainToClass(ReadCompanyDto, newCompany);
@@ -30,6 +31,14 @@ export class CompanyService {
       return plainToClass(ReadCompanyDto, findCompany);
     }
     return null;
+  }
+
+  async findAllCompanies(): Promise<ReadCompanyDto[]> {
+    const findCompanies = await this.companyRepository.find()
+
+    return findCompanies.map((company) =>
+      plainToClass(ReadCompanyDto, company),
+    );
   }
 
   async updateCompany(

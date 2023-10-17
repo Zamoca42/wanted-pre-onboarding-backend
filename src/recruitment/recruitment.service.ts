@@ -90,7 +90,7 @@ export class RecruitmentService {
       .leftJoin('recruitment.company', 'company')
       .select([
         'recruitment.id as id',
-        'company.name as companyName',
+        'company.name as name',
         'company.country as country',
         'company.district as district',
         'recruitment.position as position',
@@ -124,10 +124,6 @@ export class RecruitmentService {
         district: district || '판교',
       });
       companyInfo = await this.companyRepository.save(newCompany);
-    } else {
-      companyInfo.name = name;
-      companyInfo.country = country || '한국';
-      companyInfo.district = district || '판교';
     }
 
     const updateResult = await this.recruitmentRepository

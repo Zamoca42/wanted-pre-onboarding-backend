@@ -33,13 +33,13 @@ export class RecruitmentController {
   }
 
   @Patch('recruitment/:id')
-  async update(@Param('id') id: string, @Body() request: UpdateRecruitmentDto) {
+  async updateRecruitmentById(@Param('id') id: string, @Body() request: UpdateRecruitmentDto) {
     await this.recruitmentService.updateRecruitment(+id, request)
     return this.recruitmentService.findOneRecruitmentById(+id);
   }
 
   @Delete('recruitment/:id')
-  async remove(@Param('id') id: string) {
+  async removeRecruitment(@Param('id') id: string) {
     await this.recruitmentService.deleteRecruitmentById(+id)
     return await this.recruitmentService.findAllRecruitments();
   }

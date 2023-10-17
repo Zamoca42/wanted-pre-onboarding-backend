@@ -1,10 +1,20 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { CommonDateEntity } from 'src/common/entities/common.entities';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity('CRUD')
-export class Recruitment {
-  @PrimaryGeneratedColumn('increment')
+@Entity('recruitment')
+export class Recruitment extends CommonDateEntity {
+  @PrimaryGeneratedColumn({ primaryKeyConstraintName: 'recruitmentId' })
   id: number;
 
   @Column()
-  desc: string;
+  position: string;
+
+  @Column()
+  reward: number;
+
+  @Column()
+  skill: string;
+
+  @Column()
+  content: string;
 }

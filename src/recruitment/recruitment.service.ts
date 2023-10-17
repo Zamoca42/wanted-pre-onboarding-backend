@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, SelectQueryBuilder } from 'typeorm';
 import { CreateRecruitmentDto } from './dto/create-recruitment.dto';
 import { UpdateRecruitmentDto } from './dto/update-recruitment.dto';
 import { Recruitment } from './entities/recruitment.entity';
@@ -14,6 +14,7 @@ import { Company } from 'src/company/entities/company.entity';
 import { plainToClass } from 'class-transformer';
 import { CompanyService } from 'src/company/company.service';
 import { ReadRecruitmentDetailDto } from './dto/read-recruitment-detail.dto';
+import { RecruitmentsFiltersDto } from './dto/read-recruitment-filters.dto';
 
 @Injectable()
 export class RecruitmentService {
@@ -84,8 +85,8 @@ export class RecruitmentService {
     });
   }
 
-  async findAllRecruitments(): Promise<ReadRecruitmentDto[]> {
-    const recruitments = await this.recruitmentRepository
+  private async getRecruitmentQuery() {
+    return this.recruitmentRepository
       .createQueryBuilder('recruitment')
       .leftJoin('recruitment.company', 'company')
       .select([
@@ -96,12 +97,40 @@ export class RecruitmentService {
         'recruitment.position as position',
         'recruitment.reward as reward',
         'recruitment.skill as skill',
-      ])
-      .getRawMany();
+      ]);
+  }
 
+  private async executeRecruitmentQuery(
+    query: SelectQueryBuilder<Recruitment>,
+  ) {
+    const recruitments = await query.getRawMany();
     return recruitments.map((recruitment) =>
       plainToClass(ReadRecruitmentDto, recruitment),
     );
+  }
+
+  async findRecruitmentsWithFilters(request: RecruitmentsFiltersDto) {
+    const queryRecruitments = await this.getRecruitmentQuery();
+
+    if (request.name && request.position) {
+      queryRecruitments.where('name = :name OR position = :position', {
+        name: request.name,
+        position: request.position,
+      });
+    } else if (request.name) {
+      queryRecruitments.andWhere('name = :name', { name: request.name });
+    } else if (request.position) {
+      queryRecruitments.andWhere('position = :position', {
+        position: request.position,
+      });
+    }
+
+    return this.executeRecruitmentQuery(queryRecruitments);
+  }
+
+  async findAllRecruitments(): Promise<ReadRecruitmentDto[]> {
+    const queryRecruitments = await this.getRecruitmentQuery();
+    return this.executeRecruitmentQuery(queryRecruitments);
   }
 
   async updateRecruitment(
